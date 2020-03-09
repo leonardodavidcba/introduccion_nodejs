@@ -1,47 +1,35 @@
-var http = require('http');
-var {info,error} = require("./modules/my-log");
-var {countries} = require("countries-list");
-var url = require("url");
-var querystring =  require("querystring");
+const express = require('express');
+const { countries, languages } = require('countries-list');
 
+const app = express();
 
-
-var server = http.createServer(function(request,response){
-var parsed = url.parse(request.url);
-
-    console.log("parsed:",parsed);
- 
-    var pathname = parsed.pathname;
- var query = querystring.parse(parsed.query);
-console.log("query:",query);
-
-
-    if(pathname === '/')
-{
-    response.writeHead(200,{"Content-Type": "Text/html"});
-    response.write("<html><body><p>Hola mundo</p></body></html>");
-    response.end();
-} else if(pathname === '/info')
-{
-    var result = info(pathname)
-    response.writeHead(200,{"Content-Type": "Text/html"});
-    response.write(result);
-    response.end();
-}
-    else if(pathname === '/country')
-{   response.writeHead(200,{"Content-Type": "application/json"});
-    response.write(JSON.stringify(countries [query.code]));
-    response.end();
-
-} else if(pathname === '/error')
-{
-    var result = error(pathname)
-    response.writeHead(200,{"Content-Type": "Text/html"});
-    response.write(result);
-    response.end();
-}
-   
+app.get('/', (request, response) => {
+  response.status(200).send('Hello');
 });
 
-server.listen(4000);
-console.log("runing on 4000");
+app.get('/country', (request, response) => {
+  // console.log('request.query', request.query);
+  response.json(countries[request.query.code]);
+});
+
+app.get('/languages/:lang', (request, response) => {
+  // console.log('request.params', request.params);
+
+  const lang = languages[request.param.lang];
+  if (lang) {
+    response.json({ status: 'OK', data: lang });
+  } else {
+    response.status(404).json({
+      status: 'NOT_FOUND',
+      message: `language ${request.params.lang} not_fund`,
+    });
+  }
+});
+
+app.get('*', (request, response) => {
+  response.status(404).send('Not Funsd');
+});
+
+app.listen(4000, () => {
+  console.log('runing on 4000');
+});
